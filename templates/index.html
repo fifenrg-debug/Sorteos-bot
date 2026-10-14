@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sorteos en Cuba</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body {
+            background: linear-gradient(135deg, #06170f 0%, #0d2b1c 50%, #05120b 100%);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            height: 100vh;
+            height: 100dvh;
+            padding: 8px 10px;
+            overflow: hidden;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #f1c40f;
+            margin-top: 4px;
+        }
+        /* ESTILOS DEL TEMPORIZADOR */
+        .countdown-container {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(243, 156, 18, 0.5);
+            padding: 6px 14px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin: 4px 0;
+        }
+        .countdown-label {
+            font-size: 11px;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .countdown-timer {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: auto 0;
+        }
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, #164e2c 0%, #0a2e1c 80%);
+            border: 10px solid #f39c12;
+            position: relative;
+            box-shadow: 
+                0 10px 25px rgba(0, 0, 0, 0.8),
+                inset 0 0 18px rgba(0, 0, 0, 0.9),
+                0 0 25px rgba(243, 156, 18, 0.4);
+            overflow: hidden;
+            transition: transform 4s cubic-bezier(0.15, 0.75, 0.14, 1);
+        }
+        .wheel-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1.5px;
+            background: rgba(243, 156, 18, 0.4);
+            pointer-events: none;
+        }
+        .wheel-number {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 28px;
+            height: 28px;
+            margin: -14px 0 0 -14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 13px;
+            color: #f9e79f;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+            pointer-events: none;
+        }
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 42px;
+            height: 42px;
+            background: radial-gradient(circle, #f39c12 0%, #b78103 70%, #5a3e01 100%);
+            border-radius: 50%;
+            border: 3px solid #ffffff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.6);
+            z-index: 5;
+            cursor: pointer;
+        }
+        .wheel-center:active {
+            transform: translate(-50%, -50%) scale(0.95);
+        }
+        .pointer-container {
+            position: absolute;
+            top: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+        .pointer-gem {
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #ff3366 0%, #800020 100%);
+            border-radius: 50%;
+            border: 1.5px solid #ffd700;
+            margin-bottom: -2px;
+            box-shadow: 0 0 6px rgba(255,0,80,0.9);
+        }
+        .pointer {
+            width: 0;
+            height: 0;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-bottom: 14px solid #f39c12;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));
+        }
+
+        .btn-sorteos {
+            background: linear-gradient(135deg, rgba(20, 80, 48, 0.95) 0%, rgba(10, 40, 24, 0.95) 100%);
+            border: 2px solid #2ecc71;
+            color: #ffffff;
+            width: 85%;
+            max-width: 280px;
+            padding: 10px 20px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            margin-bottom: 8px;
+        }
+        .btn-sorteos span.icon-gifts { font-size: 16px; }
+
+        .nav-bar {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(8, 22, 14, 0.98);
+            border-top: 1.5px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 6px;
+            border-radius: 16px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.7);
+            margin-bottom: 6px;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #a0aec0;
+            cursor: pointer;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px 4px;
+            flex: 1;
+            margin: 0 3px;
+            min-height: 54px;
+        }
+        .nav-item span.icon { font-size: 20px; }
+        .nav-item.active { color: #2ecc71; border-color: rgba(46, 204, 113, 0.4); background: rgba(46, 204, 113, 0.12); font-weight: 600; }
+
+        /* ESTILOS DE LA VENTANA MODAL PERSONALIZADA */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-card {
+            background: linear-gradient(135deg, #0d2b1c 0%, #06170f 100%);
+            border: 2px solid #f39c12;
+            width: 85%;
+            max-width: 320px;
+            padding: 22px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9), 0 0 20px rgba(243, 156, 18, 0.3);
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+        .modal-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #f1c40f;
+            margin-bottom: 8px;
+        }
+        .modal-text {
+            font-size: 14px;
+            color: #e2e8f0;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        .modal-btn {
+            background: linear-gradient(135deg, #f39c12 0%, #d4af37 100%);
+            color: #06170f;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
+            width: 100%;
+        }
+        .modal-btn:active {
+            transform: scale(0.96);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        🎁 Sorteos en Cuba 🎁
+    </div>
+
+    <!-- CONTENEDOR DEL TEMPORIZADOR DE 2 HORAS -->
+    <div class="countdown-container">
+        <div class="countdown-label">Próximo Sorteo en:</div>
+        <div class="countdown-timer" id="countdownTimer">02:00:00</div>
+    </div>
+
+    <div class="wheel-container">
+        <div class="pointer-container">
+            <div class="pointer-gem"></div>
+            <div class="pointer"></div>
+        </div>
+        <div class="wheel" id="wheel">
+            <div class="wheel-line" style="transform: rotate(0deg);"></div>
+            <div class="wheel-line" style="transform: rotate(30deg);"></div>
+            <div class="wheel-line" style="transform: rotate(60deg);"></div>
+            <div class="wheel-line" style="transform: rotate(90deg);"></div>
+            <div class="wheel-line" style="transform: rotate(120deg);"></div>
+            <div class="wheel-line" style="transform: rotate(150deg);"></div>
+            
+            <div class="wheel-center" onclick="girarRuleta()"></div>
+        </div>
+    </div>
+
+    <button class="btn-sorteos" onclick="abrirSorteos()">
+        <span class="icon-gifts">🎁🎁🎁</span>
+        Mis Sorteos
+    </button>
+
+    <div class="nav-bar">
+        <button class="nav-item active" onclick="accionMenu('recargar')">
+            <span class="icon">🪙</span>
+            <span>Recargar</span>
+        </button>
+        <button class="nav-item" onclick="accionMenu('retirar')">
+            <span class="icon">🏛️</span>
+            <span>Retirar</span>
+        </button>
+        <button class="nav-item" onclick="accionMenu('cartera')">
+            <span class="icon">💳</span>
+            <span>Mi Cartera</span>
+        </button>
+        <button class="nav-item" onclick="accionMenu('soporte')">
+            <span class="icon">🎧</span>
+            <span>Soporte</span>
+        </button>
+    </div>
+
+    <!-- VENTANA MODAL PARA RESULTADO DE RULETA -->
+    <div class="modal-overlay" id="modalResultado">
+        <div class="modal-card">
+            <div class="modal-icon">🎉</div>
+            <div class="modal-title">¡Felicidades!</div>
+            <div class="modal-text" id="modalTextoMensaje">La ruleta se detuvo en el número: --</div>
+            <button class="modal-btn" onclick="cerrarModal()">Aceptar</button>
+        </div>
+    </div>
+
+    <!-- VENTANA MODAL GENERAL PARA ACCIONES -->
+    <div class="modal-overlay" id="modalAccion">
+        <div class="modal-card">
+            <div class="modal-icon" id="modalAccionIcon">🪙</div>
+            <div class="modal-title" id="modalAccionTitulo">Acción</div>
+            <div class="modal-text" id="modalAccionTexto">Texto descriptivo.</div>
+            
+            <div id="modalAccionContenidoDinamico" style="margin-bottom: 15px;">
+                <!-- Inputs o elementos adicionales se inyectan aquí -->
+            </div>
+
+            <div style="display: flex; gap: 10px;" id="modalAccionBotonesContainer">
+                <button class="modal-btn" id="modalBtnCancelar" style="background: rgba(255,255,255,0.1); color: #fff;" onclick="cerrarModalAccion()">Cancelar</button>
+                <button class="modal-btn" id="modalBtnAceptar" onclick="ejecutarAccionModal()">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram?.WebApp;
+        if (tg) { tg.expand(); }
+        const telegramId = tg?.initDataUnsafe?.user?.id || 1297569950;
+
+        const wheel = document.getElementById('wheel');
+        const totalNumbers = 12;
+        const radius = 76;
+
+        for (let i = 1; i <= totalNumbers; i++) {
+            const angle = ((i - 1) * (360 / totalNumbers)) - 75;
+            const rad = angle * (Math.PI / 180);
+            
+            const x = Math.cos(rad) * radius;
+            const y = Math.sin(rad) * radius;
+
+            const numDiv = document.createElement('div');
+            numDiv.className = 'wheel-number';
+            numDiv.style.transform = `translate(${x}px, ${y}px)`;
+            numDiv.innerText = i;
+            
+            wheel.appendChild(numDiv);
+        }
+
+        // --- LÓGICA DEL TEMPORIZADOR DE 2 HORAS ---
+        function iniciarTemporizador() {
+            fetch('/api/sorteo/tiempo')
+                .then(res => res.json())
+                .then(data => {
+                    let tiempoRestante = data.tiempo_restante;
+
+                    const intervalo = setInterval(() => {
+                        if (tiempoRestante <= 0) {
+                            clearInterval(intervalo);
+                            document.getElementById('countdownTimer').innerText = "¡Sorteando!";
+                            return;
+                        }
+
+                        let horas = Math.floor(tiempoRestante / 3600);
+                        let minutos = Math.floor((tiempoRestante % 3600) / 60);
+                        let segundos = tiempoRestante % 60;
+
+                        let formato = 
+                            String(horas).padStart(2, '0') + ":" +
+                            String(minutos).padStart(2, '0') + ":" +
+                            String(segundos).padStart(2, '0');
+
+                        document.getElementById('countdownTimer').innerText = formato;
+                        tiempoRestante--;
+                    }, 1000);
+                })
+                .catch(err => {
+                    console.error("Error al sincronizar tiempo del sorteo:", err);
+                    document.getElementById('countdownTimer').innerText = "02:00:00";
+                });
+        }
+
+        iniciarTemporizador();
+
+        let currentRotation = 0;
+        let isSpinning = false;
+
+        function girarRuleta() {
+            if (isSpinning) return;
+            isSpinning = true;
+
+            const randomArray = new Uint32Array(1);
+            window.crypto.getRandomValues(randomArray);
+            const numeroGanador = (randomArray[0] % totalNumbers) + 1;
+
+            const degreesPerItem = 360 / totalNumbers;
+            const targetAngleOffset = 360 - (numeroGanador - 1) * degreesPerItem;
+            const extraSpins = (Math.floor(Math.random() * 4) + 5) * 360;
+            
+            currentRotation += extraSpins + (targetAngleOffset - (currentRotation % 360));
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                
+                fetch('/api/girar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegram_id: telegramId, numero: numeroGanador })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    mostrarModal(numeroGanador, data.mensaje);
+                })
+                .catch(err => {
+                    mostrarModal(numeroGanador, "¡Número registrado correctamente!");
+                });
+
+            }, 4000);
+        }
+
+        function mostrarModal(numero, mensajeBackend) {
+            const modal = document.getElementById('modalResultado');
+            const texto = document.getElementById('modalTextoMensaje');
+            texto.innerHTML = `La ruleta se detuvo en el número: <b style="color: #f1c40f; font-size: 18px;">${numero}</b><br><span style="font-size: 12px; color: #a0aec0;">${mensajeBackend}</span>`;
+            modal.classList.add('active');
+        }
+
+        function cerrarModal() {
+            const modal = document.getElementById('modalResultado');
+            modal.classList.remove('active');
+        }
+
+        // --- NUEVA LÓGICA DE MIS SORTEOS Y COMPRA DE TICKETS ---
+        function abrirSorteos() {
+            fetch('/api/sorteos/disponibles')
+                .then(res => res.json())
+                .then(sorteos => {
+                    let htmlSorteos = '<div style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto;">';
+                    sorteos.forEach(s => {
+                        htmlSorteos += `
+                            <button onclick="seleccionarSorteo(${s.id}, '${s.titulo}', ${s.precio}, ${s.total_numeros})" style="background: rgba(243, 156, 18, 0.15); border: 1px solid #f39c12; color: #fff; padding: 10px; border-radius: 10px; cursor: pointer; text-align: left; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <b style="color: #f1c40f; font-size: 14px; display: block;">${s.titulo}</b>
+                                    <span style="font-size: 11px; color: #a0aec0;">Boleto: ${s.precio} CUP</span>
+                                </div>
+                                <span style="background: #f39c12; color: #06170f; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 12px;">Jugar</span>
+                            </button>
+                        `;
+                    });
+                    htmlSorteos += '</div>';
+
+                    mostrarModalCustom("🎁", "Mis Sorteos - Activos", "Selecciona en qué categoría de sorteo deseas participar:", false, "", "Cerrar", null, htmlSorteos);
+                })
+                .catch(err => {
+                    mostrarModalCustom("⚠️", "Error", "No se pudieron cargar los sorteos disponibles.", false, "", "Aceptar", null);
+                });
+        }
+
+        function seleccionarSorteo(sorteoId, tituloSorteo, precioBoleto, totalNumeros) {
+            cerrarModalAccion();
+            
+            fetch(`/api/sorteos/${sorteoId}/ocupados`)
+                .then(res => res.json())
+                .then(ocupados => {
+                    let gridHtml = `
+                        <div style="font-size: 12px; color: #a0aec0; margin-bottom: 8px;">
+                            Precio por boleto: <b style="color:#f1c40f;">${precioBoleto} CUP</b><br>
+                            Selecciona un número disponible:
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-height: 200px; overflow-y: auto; padding: 4px;" id="gridNumerosSorteo">
+                    `;
+
+                    for (let i = 1; i <= totalNumeros; i++) {
+                        let estaOcupado = ocupados[i] !== undefined;
+                        let esMio = Number(ocupados[i]) === Number(telegramId);
+                        
+                        let estiloBtn = "background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; color: #fff;";
+                        let onclickAttr = `onclick="comprarBoleto(${sorteoId}, ${i}, ${precioBoleto}, '${tituloSorteo}', ${totalNumeros})"`;
+                        
+                        if (estaOcupado) {
+                            if (esMio) {
+                                estiloBtn = "background: rgba(52, 152, 219, 0.3); border: 1px solid #3498db; color: #fff; opacity: 0.9;";
+                                onclickAttr = `onclick="alert('¡Este número ya es tuyo! Está registrado en tu cola de espera.')"`;
+                            } else {
+                                estiloBtn = "background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); color: #555; text-decoration: line-through; cursor: not-allowed;";
+                                onclickAttr = "";
+                            }
+                        }
+
+                        gridHtml += `<button ${onclickAttr} style="${estiloBtn} padding: 8px 0; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer;">${i}</button>`;
+                    }
+                    gridHtml += `</div>`;
+
+                    mostrarModalCustom("🎟️", tituloSorteo, "", false, "", "Volver a Sorteos", () => { abrirSorteos(); }, gridHtml);
+                });
+        }
+
+        function comprarBoleto(sorteoId, numero, precioBoleto, tituloSorteo, totalNumeros) {
+            if (!confirm(`¿Deseas comprar el número ${numero} por ${precioBoleto} CUP?`)) return;
+
+            fetch('/api/sorteos/comprar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    telegram_id: telegramId,
+                    sorteo_id: sorteoId,
+                    numero: numero
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.exito) {
+                    mostrarModalCustom("🎉", "¡Boleto Adquirido!", data.mensaje, false, "", "Aceptar", () => {
+                        seleccionarSorteo(sorteoId, tituloSorteo, precioBoleto, totalNumeros);
+                    });
+                } else {
+                    mostrarModalCustom("⚠️", "Aviso de Compra", data.mensaje, false, "", "Aceptar", null);
+                }
+            })
+            .catch(err => {
+                mostrarModalCustom("❌", "Error", "No se pudo procesar la compra del boleto.", false, "", "Aceptar", null);
+            });
+        }
+
+        // --- SISTEMA DE MODALES PERSONALIZADAS ---
+        let callbackAccion = null;
+
+        function mostrarModalCustom(icon, titulo, texto, mostrarInput, inputPlaceholder = "", btnTexto = "Aceptar", onAceptar = null, htmlExtra = "") {
+            document.getElementById('modalAccionIcon').innerText = icon;
+            document.getElementById('modalAccionTitulo').innerText = titulo;
+            document.getElementById('modalAccionTexto').innerHTML = texto;
+            
+            let contenedorDinamico = document.getElementById('modalAccionContenidoDinamico');
+            let contenidoHtml = "";
+            if (mostrarInput) {
+                contenidoHtml += `<input type="text" id="inputModalDinamico" placeholder="${inputPlaceholder}" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #f39c12; background: rgba(0,0,0,0.5); color: #fff; text-align: center; font-size: 16px; outline: none; margin-bottom: 8px;">`;
+            }
+            if (htmlExtra) {
+                contenidoHtml += htmlExtra;
+            }
+            contenedorDinamico.innerHTML = contenidoHtml;
+
+            let btnAceptar = document.getElementById('modalBtnAceptar');
+            btnAceptar.innerText = btnTexto;
+            callbackAccion = onAceptar;
+
+            document.getElementById('modalAccion').classList.add('active');
+            if (mostrarInput) {
+                setTimeout(() => { document.getElementById('inputModalDinamico')?.focus(); }, 100);
+            }
+        }
+
+        function cerrarModalAccion() {
+            document.getElementById('modalAccion').classList.remove('active');
+            callbackAccion = null;
+        }
+
+        function ejecutarAccionModal() {
+            if (callbackAccion) {
+                let inputEl = document.getElementById('inputModalDinamico');
+                let inputVal = inputEl ? inputEl.value : null;
+                callbackAccion(inputVal);
+            } else {
+                cerrarModalAccion();
+            }
+        }
+
+        function accionMenu(tipo) {
+            if (tipo === 'recargar') {
+                mostrarModalCustom("🪙", "Recargar Saldo (MiTransfer)", "Ingrese la cantidad en CUP que desea recargar:", true, "Ej: 500", "Continuar", (monto) => {
+                    if (!monto || isNaN(monto)) {
+                        mostrarModalCustom("⚠️", "Aviso", "Por favor ingrese un número válido.", false, "", "Aceptar", null);
+                        return;
+                    }
+                    cerrarModalAccion();
+                    
+                    let telefonoMiTransfer = "52728871"; 
+                    
+                    let textoInstrucciones = `Para recargar <b>${monto} CUP</b>:<br><br>` +
+                        `1. Realiza la transferencia por <b>MiTransfer</b> al número:<br>` +
+                        `<b style="color:#f1c40f; font-size: 16px;">📱 ${telefonoMiTransfer}</b><br><br>` +
+                        `2. Selecciona tu captura completa y presiona Enviar:<br>`;
+
+                    let inputArchivoHtml = `
+                        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; border: 1px dashed #f39c12; text-align: left;">
+                            <label style="font-size: 12px; color: #f1c40f; display: block; margin-bottom: 4px;">Adjuntar captura completa:</label>
+                            <input type="file" id="fileCaptura" accept="image/*" style="width: 100%; color: #fff; font-size: 12px;">
+                        </div>
+                    `;
+
+                    mostrarModalCustom("💳", "Datos de MiTransfer", textoInstrucciones, false, "", "Enviar Comprobante", () => {
+                        let fileInput = document.getElementById('fileCaptura');
+                        if (!fileInput || fileInput.files.length === 0) {
+                            alert("Por favor adjunta la captura de pantalla de la transferencia.");
+                            return;
+                        }
+
+                        let formData = new FormData();
+                        formData.append('telegram_id', telegramId);
+                        formData.append('monto', parseFloat(monto));
+                        formData.append('referencia', 'MiTransfer (Tel: 52728871)');
+                        formData.append('captura', fileInput.files[0]);
+
+                        cerrarModalAccion();
+                        mostrarModalCustom("✅", "Solicitud Enviada", "¡Comprobante y solicitud enviados con éxito!<br><br><b>Serán verificados por el administrador.</b>", false, "", "Aceptar", null);
+
+                        fetch('/api/recargar', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .catch(err => console.error("Error al enviar recarga:", err));
+                    }, inputArchivoHtml);
+                });
+
+            } else if (tipo === 'cartera') {
+                fetch(`/api/usuario/${telegramId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        mostrarModalCustom("💳", "Mi Cartera", `Tu saldo actual en el monedero es:<br><br><b style="font-size: 24px; color: #f1c40f;">${data.saldo} CUP</b>`, false, "", "Aceptar", null);
+                    })
+                    .catch(() => {
+                        mostrarModalCustom("💳", "Mi Cartera", "No se pudo obtener el saldo actual.", false, "", "Aceptar", null);
+                    });
+
+            } else if (tipo === 'retirar') {
+                mostrarModalCustom("🏛️", "Retirar Fondos", "Ingrese la cantidad de CUP que desea retirar:", true, "Ej: 200", "Continuar", (montoRetiro) => {
+                    if (!montoRetiro || isNaN(montoRetiro)) {
+                        mostrarModalCustom("⚠️", "Aviso", "Ingrese un monto válido.", false, "", "Aceptar", null);
+                        return;
+                    }
+                    cerrarModalAccion();
+                    
+                    mostrarModalCustom("💳", "Tarjeta de Destino", "Ingrese el número de su tarjeta CUP para recibir el pago:", true, "Número de tarjeta", "Enviar Solicitud", (tarjetaDestino) => {
+                        if (!tarjetaDestino) return;
+                        cerrarModalAccion();
+
+                        fetch('/api/retirar', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                telegram_id: telegramId, 
+                                monto: parseFloat(montoRetiro),
+                                datos_bancarios: tarjetaDestino 
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            mostrarModalCustom("✅", "Retiro Solicitado", data.mensaje, false, "", "Aceptar", null);
+                        });
+                    });
+                });
+
+            } else if (tipo === 'soporte') {
+                mostrarModalCustom("🎧", "Soporte al Cliente", "Escribe tu duda, problema o sugerencia y te atenderemos lo antes posible:", true, "Escribe tu mensaje aquí...", "Enviar Mensaje", (mensajeUsuario) => {
+                    if (!mensajeUsuario || mensajeUsuario.trim() === "") {
+                        mostrarModalCustom("⚠️", "Aviso", "Por favor escribe un mensaje antes de enviar.", false, "", "Aceptar", null);
+                        return;
+                    }
+                    cerrarModalAccion();
+
+                    fetch('/api/soporte', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            telegram_id: telegramId, 
+                            mensaje: mensajeUsuario 
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        mostrarModalCustom("✅", "Mensaje Enviado", data.mensaje, false, "", "Aceptar", null);
+                    })
+                    .catch(err => {
+                        console.error("Error al enviar soporte:", err);
+                        mostrarModalCustom("❌", "Error", "No se pudo enviar el mensaje de soporte.", false, "", "Aceptar", null);
+                    });
+                });
+            }
+        }
+    </script>
+</body>
+</html>
