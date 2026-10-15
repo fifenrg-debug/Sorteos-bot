@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import time
+import threading
 from flask import Flask, render_template, request, jsonify, g
 import telebot
 
@@ -234,16 +235,6 @@ def aprobar_transaccion(message):
 def index():
     return render_template('index.html')
 
-@app.route(f'/bot/{TOKEN}', methods=['POST'])
-def webhook():
-    if request.headers.get('content-type') == 'application/json':
-        json_string = request.get_data().decode('utf-8')
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return '', 200
-    else:
-        return '', 403
-
 @app.route('/api/sorteo/tiempo', methods=['GET'])
 def obtener_tiempo_sorteo():
     db = get_db()
@@ -459,13 +450,21 @@ def comprar_ticket_sorteo():
         print("Error compra:", e)
         return jsonify({"exito": False, "mensaje": "Ocurrió un error al procesar la compra."})
 
-# Inicialización y configuración del Webhook al arrancar la app web
+# Inicialización de la Base de Datos
 init_db()
 
-WEBHOOK_URL = f"https://NoelPro.pythonanywhere.com/bot/{TOKEN}"
-try:
-    bot.remove_webhook()
-    bot.set_webhook(url=WEBHOOK_URL)
+# Configuración del Bot en segundo plano mediante Polling para evitar problemas con Webhooks en cuentas gratuitas
+def iniciar_bot_polling():
+    try:
+        bot.remove_webhook()
+        print("Iniciando bot de Telegram en modo polling...")
+        bot.infinity_polling(skip_pending=True)
+    except Exception as e:
+        print("Error en el polling del bot:", e)
+
+hilo_bot = threading.Thread(target=iniciar_bot_polling, daemon=True)
+hilo_bot.start()
+  bot.set_webhook(url=WEBHOOK_URL)
     print(f"Webhook configurado correctamente en: {WEBHOOK_URL}")
 except Exception as e:
     print("Error al configurar el webhook:", e)
