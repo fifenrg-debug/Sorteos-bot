@@ -1,6 +1,5 @@
 import os
 import sqlite3
-import threading
 import time
 from flask import Flask, render_template, request, jsonify, g
 import telebot
@@ -15,10 +14,10 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Base de datos relativa (funciona igual en Android o en un servidor Linux)
+# Base de datos relativa
 DATABASE = os.path.join(BASE_DIR, 'sorteo.db')
 
-# Credenciales (pueden pasar a ser variables de entorno en producción)
+# Credenciales
 TOKEN = os.environ.get('TELEGRAM_TOKEN', '8933969399:AAGWHO0-ZlE9kNlw4SOwixd-IbHmkmPPSXY')
 ADMIN_ID = int(os.environ.get('ADMIN_ID', 8478276387))
 
@@ -238,6 +237,17 @@ def aprobar_transaccion(message):
 def index():
     return render_template('index.html')
 
+# --- RUTA PARA EL WEBHOOK DE TELEGRAM ---
+@app.route(f'/bot/{TOKEN}', methods=['POST'])
+def webhook():
+    if request.headers.get('content-type') == 'application/json':
+        json_string = request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return '', 200
+    else:
+        return '', 403
+
 @app.route('/api/sorteo/tiempo', methods=['GET'])
 def obtener_tiempo_sorteo():
     db = get_db()
@@ -438,7 +448,7 @@ def comprar_ticket_sorteo():
         return jsonify({"exito": False, "mensaje": f"Saldo insuficiente. Necesitas {precio} CUP."})
     
     try:
-        cursor.execute('INSERT INTO tickets_sorteos (sorteo_id, numero, telegram_id) VALUES (?, ?, ?)',
+        cursor.execute('INSERT INTO tickets_sorteos (sorteo_id, numero, telegram_id) WHERE VALUES (?, ?, ?)',
                        (sorteo_id, numero, telegram_id))
         cursor.execute('UPDATE usuarios SET saldo = saldo - ? WHERE telegram_id = ?', (precio, telegram_id))
         db.commit()
@@ -455,18 +465,17 @@ def comprar_ticket_sorteo():
         print("Error en compra de ticket:", e)
         return jsonify({"exito": False, "mensaje": "Ocurrió un error al procesar la compra."})
 
-def iniciar_bot():
-    while True:
-        try:
-            bot.infinity_polling(none_stop=True, interval=2, timeout=20)
-        except Exception as e:
-            time.sleep(10)
+# Inicialización y configuración del Webhook al arrancar la app web
+init_db()
+
+WEBHOOK_URL = f"https://NoelPro.pythonanywhere.com/bot/{TOKEN}"
+try:
+    bot.remove_webhook()
+    bot.set_webhook(url=WEBHOOK_URL)
+    print(f"Webhook configurado correctamente en: {WEBHOOK_URL}")
+except Exception as e:
+    print("Error al configurar el webhook:", e)
 
 if __name__ == '__main__':
-    init_db()
-    hilo_bot = threading.Thread(target=iniciar_bot, daemon=True)
-    hilo_bot.start()
-    
-    # Puerto dinámico compatible con la nube (Render, Railway, etc.) o local (5000)
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
