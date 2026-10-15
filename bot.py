@@ -448,7 +448,7 @@ def comprar_ticket_sorteo():
         return jsonify({"exito": False, "mensaje": f"Saldo insuficiente. Necesitas {precio} CUP."})
     
     try:
-        cursor.execute('INSERT INTO tickets_sorteos (sorteo_id, numero, telegram_id) WHERE VALUES (?, ?, ?)',
+        cursor.execute('INSERT INTO tickets_sorteos (sorteo_id, numero, telegram_id) VALUES (?, ?, ?)',
                        (sorteo_id, numero, telegram_id))
         cursor.execute('UPDATE usuarios SET saldo = saldo - ? WHERE telegram_id = ?', (precio, telegram_id))
         db.commit()
@@ -479,3 +479,4 @@ except Exception as e:
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+alse)
