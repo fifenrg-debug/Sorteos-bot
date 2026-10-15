@@ -453,7 +453,7 @@ def comprar_ticket_sorteo():
 # Inicialización de la Base de Datos
 init_db()
 
-# Configuración del Bot en segundo plano mediante Polling para evitar problemas con Webhooks en cuentas gratuitas
+# Configuración del Bot en segundo plano mediante Polling
 def iniciar_bot_polling():
     try:
         bot.remove_webhook()
@@ -464,7 +464,3 @@ def iniciar_bot_polling():
 
 hilo_bot = threading.Thread(target=iniciar_bot_polling, daemon=True)
 hilo_bot.start()
-  bot.set_webhook(url=WEBHOOK_URL)
-    print(f"Webhook configurado correctamente en: {WEBHOOK_URL}")
-except Exception as e:
-    print("Error al configurar el webhook:", e)
