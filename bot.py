@@ -4,20 +4,17 @@ import time
 from flask import Flask, render_template, request, jsonify, g
 import telebot
 
-# --- CONFIGURACIÓN DINÁMICA PARA LA NUBE Y LOCAL ---
+# --- CONFIGURACIÓN DINÁMICA ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 template_dir = os.path.join(BASE_DIR, 'templates')
 app = Flask(__name__, template_folder=template_dir)
 
-# Carpeta de subidas relativa
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Base de datos relativa
 DATABASE = os.path.join(BASE_DIR, 'sorteo.db')
 
-# Credenciales
 TOKEN = os.environ.get('TELEGRAM_TOKEN', '8933969399:AAGWHO0-ZlE9kNlw4SOwixd-IbHmkmPPSXY')
 ADMIN_ID = int(os.environ.get('ADMIN_ID', 8478276387))
 
@@ -237,7 +234,6 @@ def aprobar_transaccion(message):
 def index():
     return render_template('index.html')
 
-# --- RUTA PARA EL WEBHOOK DE TELEGRAM ---
 @app.route(f'/bot/{TOKEN}', methods=['POST'])
 def webhook():
     if request.headers.get('content-type') == 'application/json':
@@ -318,12 +314,12 @@ def recargar():
                 with open(ruta_guardado, 'rb') as foto_file:
                     bot.send_photo(ADMIN_ID, foto_file, caption=caption, parse_mode="Markdown")
             except Exception as e:
-                print("Error al enviar foto al admin:", e)
+                print("Error foto:", e)
     else:
         try:
             bot.send_message(ADMIN_ID, f"🔔 *Nueva solicitud de recarga*\n🆔 Trx ID: `{trx_id}`\nUsuario ID: `{telegram_id}`\nMonto: `{monto}` CUP\nRef: {referencia}\n\nUsa `/aprobar {trx_id}` para acreditar.", parse_mode="Markdown")
         except Exception as e:
-            print("Error al notificar admin:", e)
+            print("Error admin:", e)
 
     return jsonify({"exito": True, "mensaje": "Solicitud y comprobante enviados al administrador."})
 
@@ -349,7 +345,7 @@ def retirar():
     try:
         bot.send_message(ADMIN_ID, f"🏛️ *Nueva solicitud de retiro*\nUsuario ID: `{telegram_id}`\nMonto: `{monto}` CUP\nDatos: {datos}\n\nUsa `/aprobar [ID]` cuando le transfieras.", parse_mode="Markdown")
     except Exception as e:
-        print("Error al notificar admin:", e)
+        print("Error retiro:", e)
 
     return jsonify({"exito": True, "mensaje": "Solicitud de retiro enviada."})
 
@@ -391,12 +387,10 @@ def enviar_soporte():
         )
         bot.send_message(ADMIN_ID, texto_admin, parse_mode="Markdown")
     except Exception as e:
-        print("Error al enviar mensaje de soporte al admin:", e)
+        print("Error soporte:", e)
         return jsonify({"exito": False, "mensaje": "Error al enviar el mensaje."})
 
     return jsonify({"exito": True, "mensaje": "¡Tu mensaje de soporte ha sido enviado con éxito!"})
-
-# --- ENDPOINTS PARA SORTEOS Y TICKETS ---
 
 @app.route('/api/sorteos/disponibles', methods=['GET'])
 def listar_sorteos_disponibles():
@@ -462,7 +456,7 @@ def comprar_ticket_sorteo():
         return jsonify({"exito": False, "mensaje": "Lo sentimos, este número ya fue comprado por otro usuario."})
     except Exception as e:
         db.rollback()
-        print("Error en compra de ticket:", e)
+        print("Error compra:", e)
         return jsonify({"exito": False, "mensaje": "Ocurrió un error al procesar la compra."})
 
 # Inicialización y configuración del Webhook al arrancar la app web
@@ -475,8 +469,3 @@ try:
     print(f"Webhook configurado correctamente en: {WEBHOOK_URL}")
 except Exception as e:
     print("Error al configurar el webhook:", e)
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
-alse)
