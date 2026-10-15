@@ -234,6 +234,7 @@ def aprobar_transaccion(message):
 def index():
     return render_template('index.html')
 
+# --- RUTA PARA RECIBIR LOS MENSAJES DE TELEGRAM POR WEBHOOK ---
 @app.route(f'/bot/{TOKEN}', methods=['POST'])
 def webhook():
     if request.headers.get('content-type') == 'application/json':
@@ -314,12 +315,12 @@ def recargar():
                 with open(ruta_guardado, 'rb') as foto_file:
                     bot.send_photo(ADMIN_ID, foto_file, caption=caption, parse_mode="Markdown")
             except Exception as e:
-                print("Error foto:", e)
+                print("Error al enviar foto al admin:", e)
     else:
         try:
             bot.send_message(ADMIN_ID, f"🔔 *Nueva solicitud de recarga*\n🆔 Trx ID: `{trx_id}`\nUsuario ID: `{telegram_id}`\nMonto: `{monto}` CUP\nRef: {referencia}\n\nUsa `/aprobar {trx_id}` para acreditar.", parse_mode="Markdown")
         except Exception as e:
-            print("Error admin:", e)
+            print("Error al notificar admin:", e)
 
     return jsonify({"exito": True, "mensaje": "Solicitud y comprobante enviados al administrador."})
 
@@ -345,7 +346,7 @@ def retirar():
     try:
         bot.send_message(ADMIN_ID, f"🏛️ *Nueva solicitud de retiro*\nUsuario ID: `{telegram_id}`\nMonto: `{monto}` CUP\nDatos: {datos}\n\nUsa `/aprobar [ID]` cuando le transfieras.", parse_mode="Markdown")
     except Exception as e:
-        print("Error retiro:", e)
+        print("Error al notificar admin:", e)
 
     return jsonify({"exito": True, "mensaje": "Solicitud de retiro enviada."})
 
@@ -387,7 +388,7 @@ def enviar_soporte():
         )
         bot.send_message(ADMIN_ID, texto_admin, parse_mode="Markdown")
     except Exception as e:
-        print("Error soporte:", e)
+        print("Error al enviar mensaje de soporte al admin:", e)
         return jsonify({"exito": False, "mensaje": "Error al enviar el mensaje."})
 
     return jsonify({"exito": True, "mensaje": "¡Tu mensaje de soporte ha sido enviado con éxito!"})
@@ -456,13 +457,13 @@ def comprar_ticket_sorteo():
         return jsonify({"exito": False, "mensaje": "Lo sentimos, este número ya fue comprado por otro usuario."})
     except Exception as e:
         db.rollback()
-        print("Error compra:", e)
+        print("Error en compra de ticket:", e)
         return jsonify({"exito": False, "mensaje": "Ocurrió un error al procesar la compra."})
 
 # Inicialización de la Base de Datos
 init_db()
 
-# Configuración limpia del Webhook al iniciar la aplicación web
+# Configuración automática del Webhook de Telegram al iniciar la app web
 WEBHOOK_URL = f"https://NoelPro.pythonanywhere.com/bot/{TOKEN}"
 try:
     bot.remove_webhook()
